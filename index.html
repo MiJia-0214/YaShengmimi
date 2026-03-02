@@ -176,6 +176,7 @@
     .sel-muted { border-color:#cbd5e1 !important; color:#64748b !important; background:#f8fafc !important; }
     .sel-blue { border-color:#3b82f6 !important; color:#1d4ed8 !important; background:#eff6ff !important; }
 
+    /* ★ 图片上传区：支持粘贴高亮 */
     .img-uploader {
         width:60px; height:60px;
         border-radius:6px;
@@ -188,6 +189,7 @@
         transition: 0.2s;
     }
     .img-uploader:hover { border-color: var(--primary); background:#f0fdf4; }
+    .img-uploader.paste-ready { border-color: var(--primary); background:#d1fae5; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
     .img-uploader img {
         width:100%; height:100%;
         object-fit: cover;
@@ -198,6 +200,7 @@
         color:#9ca3af;
         display:flex; flex-direction:column; align-items:center; gap:4px;
     }
+    .img-uploader.paste-ready .hint { color: var(--primary-dark); }
 
     .plan-grid {
         display: grid;
@@ -312,39 +315,6 @@
     }
     .btn-del:hover { background: #fff1f2; }
 
-    .timeline {
-        margin-top: 12px;
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 12px;
-    }
-    .timeline-top {
-        display:flex; justify-content:space-between; align-items:center;
-        font-size:0.8rem; color: var(--text-sec);
-        margin-bottom: 10px;
-    }
-    .timeline-bar {
-        position: relative;
-        height: 12px;
-        background: #eef2f7;
-        border-radius: 999px;
-        overflow: hidden;
-    }
-    .timeline-seg {
-        position:absolute; top:0; height:100%;
-        background: var(--timeline-gradient);
-        border-radius: 999px;
-        opacity: 1;
-        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-    }
-    .timeline-markers {
-        display:flex; justify-content:space-between;
-        margin-top: 8px;
-        font-size:0.75rem; color: var(--text-sec);
-    }
-    .tiny-note { font-size:0.8rem; color: var(--text-sec); margin-top: 8px; }
-
     /* === 弹窗 === */
     .modal-mask {
         position: fixed; inset: 0; background: rgba(17,24,39,0.45);
@@ -396,7 +366,7 @@
     .btn-primary:hover { filter: brightness(1.02); transform: translateY(-1px); }
     .err-tip { display:none; margin-top: 10px; color:#ef4444; font-size:0.85rem; font-weight:700; }
 
-    /* ★ 迭代：右下角提醒弹窗 */
+    /* ★ 右下角提醒弹窗 */
     .notify-dock {
         position: fixed; bottom: 20px; right: 20px;
         width: 300px;
@@ -520,9 +490,11 @@
                             <th width="90">图片</th>
                             <th width="180">基础信息 (SKU/ID/名称)</th>
                             <th width="320">计划与跟进 (与发货计划联动)</th>
-                            <th width="180">运营节点 / 借样</th>
+                            <!-- ★ 改2：统一为"营销节点" -->
+                            <th width="180">营销节点 / 借样</th>
                             <th>待跟进事项</th>
-                            <th width="230">供应商 / 备注 / 删除</th>
+                            <!-- ★ 改4：新增备选供应商列 -->
+                            <th width="280">供应商 / 备选供应商 / 备注 / 删除</th>
                         </tr>
                     </thead>
 
@@ -533,7 +505,7 @@
                                     <img alt="preview">
                                     <div class="hint">
                                         <i class="fas fa-image"></i>
-                                        <span>上传</span>
+                                        <span>上传/粘贴</span>
                                     </div>
                                     <input type="file" accept="image/*" style="display:none;">
                                 </div>
@@ -584,6 +556,7 @@
 
                             <td>
                                 <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <!-- ★ 改2：统一"营销节点"名称 -->
                                     <select class="select-mini solar-select">
                                         <option value="">选择营销节点...</option>
                                         <option value="1">1月 (New Year / 清仓)</option>
@@ -616,9 +589,11 @@
                                 <textarea class="remark-area" placeholder="在此输入待跟进内容...">确认五点描述翻译；检查外包装标签...</textarea>
                             </td>
 
+                            <!-- ★ 改4：供应商列新增"备选供应商"字段 -->
                             <td>
                                 <div style="display:flex; flex-direction:column; gap:8px;">
-                                    <input class="mini-text-full supplier-field" placeholder="供应商（工厂/渠道）">
+                                    <input class="mini-text-full supplier-field" placeholder="主供应商（工厂/渠道）">
+                                    <input class="mini-text-full alt-supplier-field" placeholder="备选供应商（工厂/渠道）">
                                     <textarea class="remark-area note-field" placeholder="备注（如：账期/起订量）"></textarea>
                                     <div style="display:flex; justify-content:flex-end;">
                                         <button class="btn-row-del" onclick="deleteProductRow(this)" title="删除此SKU"><i class="fas fa-trash-alt"></i></button>
@@ -690,22 +665,23 @@
                     <label>计划下单</label>
                     <input id="apPlan" type="date">
                 </div>
+                <!-- ★ 改2：弹窗内统一为"营销节点" -->
                 <div class="form-item">
                     <label>营销节点</label>
                     <select id="apSolar">
-                        <option value="">选择节点...</option>
-                        <option value="1">1月</option>
-                        <option value="2">2月</option>
-                        <option value="3">3月</option>
-                        <option value="4">4月</option>
-                        <option value="5">5月</option>
-                        <option value="6">6月</option>
-                        <option value="7">7月</option>
-                        <option value="8">8月</option>
-                        <option value="9">9月</option>
-                        <option value="10">10月</option>
-                        <option value="11">11月</option>
-                        <option value="12">12月</option>
+                        <option value="">选择营销节点...</option>
+                        <option value="1">1月 (New Year / 清仓)</option>
+                        <option value="2">2月 (Valentine / 春季)</option>
+                        <option value="3">3月 (Women's Day)</option>
+                        <option value="4">4月 (Easter / 复活节)</option>
+                        <option value="5">5月 (Mother's Day)</option>
+                        <option value="6">6月 (Father's Day)</option>
+                        <option value="7">7月 (Prime Day)</option>
+                        <option value="8">8月 (Back to School)</option>
+                        <option value="9">9月 (Fall Season)</option>
+                        <option value="10">10月 (Halloween / Q4)</option>
+                        <option value="11">11月 (Black Friday / CM)</option>
+                        <option value="12">12月 (Christmas)</option>
                     </select>
                 </div>
                 <div class="form-item" style="grid-column:1/-1;">
@@ -785,7 +761,8 @@
         const id = tr.querySelector('.id-field')?.value || '';
         const name = tr.querySelector('.name-field')?.value || '';
         const supplier = tr.querySelector('.supplier-field')?.value || '';
-        return normalizeText(`${sku} ${id} ${name} ${supplier}`);
+        const altSupplier = tr.querySelector('.alt-supplier-field')?.value || '';
+        return normalizeText(`${sku} ${id} ${name} ${supplier} ${altSupplier}`);
     }
 
     function applySkuSearch() {
@@ -835,7 +812,7 @@
         if(tr) {
             tr.remove();
             syncShipmentsFromProducts(); 
-            checkReminders(); // 更新提醒
+            checkReminders();
         }
     }
 
@@ -865,7 +842,7 @@
             <td>
                 <div class="img-uploader" data-img-uploader>
                     <img alt="preview">
-                    <div class="hint"><i class="fas fa-image"></i><span>上传</span></div>
+                    <div class="hint"><i class="fas fa-image"></i><span>上传/粘贴</span></div>
                     <input type="file" accept="image/*" style="display:none;">
                 </div>
             </td>
@@ -913,19 +890,19 @@
             <td>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <select class="select-mini solar-select">
-                        <option value="">选择节点...</option>
-                        <option value="1">1月</option>
-                        <option value="2">2月</option>
-                        <option value="3">3月</option>
-                        <option value="4">4月</option>
-                        <option value="5">5月</option>
-                        <option value="6">6月</option>
-                        <option value="7">7月</option>
-                        <option value="8">8月</option>
-                        <option value="9">9月</option>
-                        <option value="10">10月</option>
-                        <option value="11">11月</option>
-                        <option value="12">12月</option>
+                        <option value="">选择营销节点...</option>
+                        <option value="1">1月 (New Year / 清仓)</option>
+                        <option value="2">2月 (Valentine / 春季)</option>
+                        <option value="3">3月 (Women's Day)</option>
+                        <option value="4">4月 (Easter / 复活节)</option>
+                        <option value="5">5月 (Mother's Day)</option>
+                        <option value="6">6月 (Father's Day)</option>
+                        <option value="7">7月 (Prime Day)</option>
+                        <option value="8">8月 (Back to School)</option>
+                        <option value="9">9月 (Fall Season)</option>
+                        <option value="10">10月 (Halloween / Q4)</option>
+                        <option value="11">11月 (Black Friday / CM)</option>
+                        <option value="12">12月 (Christmas)</option>
                     </select>
                     <select class="select-mini sample-select" data-color-mode="sample">
                         <option value="no" selected>✘ 未借样</option>
@@ -942,8 +919,9 @@
             </td>
             <td>
                 <div style="display:flex; flex-direction:column; gap:8px;">
-                    <input class="mini-text-full supplier-field" placeholder="供应商">
-                    <textarea class="remark-area note-field" placeholder="备注"></textarea>
+                    <input class="mini-text-full supplier-field" placeholder="主供应商（工厂/渠道）">
+                    <input class="mini-text-full alt-supplier-field" placeholder="备选供应商（工厂/渠道）">
+                    <textarea class="remark-area note-field" placeholder="备注（如：账期/起订量）"></textarea>
                     <div style="display:flex; justify-content:flex-end;">
                         <button class="btn-row-del" onclick="deleteProductRow(this)" title="删除此SKU"><i class="fas fa-trash-alt"></i></button>
                     </div>
@@ -963,7 +941,9 @@
 
         applySkuSearch();
         syncShipmentsFromProducts(); 
-        checkReminders(); // 刷新提醒
+        checkReminders();
+
+        // ★ 改5：新增产品后自动关闭弹窗
         closeAddProduct();
     }
 
@@ -985,7 +965,6 @@
 
             let lis = '';
             content.forEach(item => {
-                // 高亮关键大促
                 if(item.includes("Prime") || item.includes("Black Friday") || item.includes("Halloween") || item.includes("Christmas") || item.includes("黑五") || item.includes("万圣节") || item.includes("圣诞")) {
                     lis += `<li><strong style="color:#ea580c">${item}</strong></li>`;
                 } else {
@@ -1045,28 +1024,77 @@
     }
 
     /* =========================
-       图片 & 颜色组件
+       ★ 改1：图片上传 + Ctrl+V 粘贴支持
        ========================= */
+    function applyImageToUploader(uploader, file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const img = uploader.querySelector('img');
+        const hint = uploader.querySelector('.hint');
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+            img.style.display = 'block';
+            if (hint) hint.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
     function bindImgUploaders(scopeEl) {
         const uploaders = scopeEl ? scopeEl.querySelectorAll('[data-img-uploader]') : document.querySelectorAll('[data-img-uploader]');
         uploaders.forEach(u => {
             if (u.__bound) return;
             u.__bound = true;
+
             const input = u.querySelector('input[type="file"]');
             const img = u.querySelector('img');
             const hint = u.querySelector('.hint');
+
+            // 点击上传
             u.addEventListener('click', () => input && input.click());
             input.addEventListener('change', () => {
                 const file = input.files && input.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    if (hint) hint.style.display = 'none';
-                };
-                reader.readAsDataURL(file);
+                if (file) applyImageToUploader(u, file);
             });
+
+            // ★ 鼠标悬停时激活粘贴模式
+            u.addEventListener('mouseenter', () => {
+                u.classList.add('paste-ready');
+                u._pasteActive = true;
+            });
+            u.addEventListener('mouseleave', () => {
+                u.classList.remove('paste-ready');
+                u._pasteActive = false;
+            });
+        });
+    }
+
+    // ★ 全局监听 paste 事件，找到当前悬停的上传区
+    document.addEventListener('paste', (e) => {
+        const activeUploader = document.querySelector('[data-img-uploader].paste-ready');
+        if (!activeUploader) return;
+
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+                const file = items[i].getAsFile();
+                if (file) {
+                    applyImageToUploader(activeUploader, file);
+                    e.preventDefault();
+                }
+                break;
+            }
+        }
+    });
+
+    function bindColorSelects(scopeEl) {
+        const sels = scopeEl ? scopeEl.querySelectorAll('[data-color-mode]') : document.querySelectorAll('[data-color-mode]');
+        sels.forEach(sel => {
+            if (sel.__bound) return;
+            sel.__bound = true;
+            sel.addEventListener('change', () => applySelectColor(sel));
+            applySelectColor(sel); 
         });
     }
 
@@ -1082,16 +1110,6 @@
             if (v === 'yes') sel.classList.add('sel-blue');
             else sel.classList.add('sel-muted');
         }
-    }
-
-    function bindColorSelects(scopeEl) {
-        const sels = scopeEl ? scopeEl.querySelectorAll('[data-color-mode]') : document.querySelectorAll('[data-color-mode]');
-        sels.forEach(sel => {
-            if (sel.__bound) return;
-            sel.__bound = true;
-            sel.addEventListener('change', () => applySelectColor(sel));
-            applySelectColor(sel); 
-        });
     }
 
     /* =========================
@@ -1115,7 +1133,6 @@
         return d;
     }
 
-    // ★ 迭代：自动化状态判断
     function autoUpdateShipmentStatus(card) {
         const factoryDateStr = card.querySelector('.ship-factory')?.value;
         const amzDateStr = card.querySelector('.ship-amzDate')?.value;
@@ -1133,20 +1150,14 @@
         const dAmz = parseDate(amzDateStr);
         const dFba = parseDate(fbaDateStr);
 
-        // 逻辑判断
         if (dFba && today >= dFba) {
             newStatus = 'received';
         } else if (dAmz && today >= dAmz) {
             newStatus = 'transit';
         } else if (dFactory && today < dFactory) {
             newStatus = 'pending';
-        } else {
-            // 中间状态（如已出厂但未给Amz发货），默认为待发货或维持原样
-            // 这里为了符合题目“抵达发货日期后才显示运输中”，我们不做额外操作，保持pending即可
         }
 
-        // 仅当状态改变时更新，避免干扰用户手动选择（如果需要支持手动覆盖）
-        // 题目要求自动显示，因此这里强制覆盖
         if (statusSelect.value !== newStatus) {
             statusSelect.value = newStatus;
             updateStatusStyle(statusSelect);
@@ -1158,8 +1169,6 @@
         if (!card) return;
 
         const rows = card.querySelectorAll('[data-logrow]');
-        let minDate = null;
-        let maxDate = null;
 
         rows.forEach(r => {
             const ship = r.querySelector('.log-ship')?.value;
@@ -1168,68 +1177,18 @@
             const arriveEl = r.querySelector('.log-arrive');
             if (arriveEl) arriveEl.value = arrive;
 
-            const d1 = parseDate(ship);
             const d2 = parseDate(arrive);
-
-            if (d1) minDate = (!minDate || d1 < minDate) ? d1 : minDate;
-            if (d2) maxDate = (!maxDate || d2 > maxDate) ? d2 : maxDate;
-
             const fba = card.querySelector('.fbaArrival');
-            if (fba && maxDate) {
-                const yyyy = maxDate.getFullYear();
-                const mm = String(maxDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(maxDate.getDate()).padStart(2, '0');
+            if (fba && d2) {
+                const yyyy = d2.getFullYear();
+                const mm = String(d2.getMonth() + 1).padStart(2, '0');
+                const dd = String(d2.getDate()).padStart(2, '0');
                 fba.value = `${yyyy}-${mm}-${dd}`;
-                // 触发同步更新状态
                 fba.dispatchEvent(new Event('input'));
             }
         });
 
-        renderTimeline(card, minDate, maxDate);
         autoUpdateShipmentStatus(card);
-    }
-
-    function renderTimeline(card, startD, endD) {
-        const bar = card.querySelector('[data-timeline] [data-bar]');
-        const rangeText = card.querySelector('.timelineRangeText');
-        const startText = card.querySelector('.timelineStartText');
-        const endText = card.querySelector('.timelineEndText');
-        const hint = card.querySelector('.timelineHint');
-        if (!bar) return;
-
-        bar.innerHTML = '';
-
-        if (!startD || !endD || endD <= startD) {
-            rangeText && (rangeText.innerText = '--');
-            startText && (startText.innerText = '--');
-            endText && (endText.innerText = '--');
-            hint && (hint.innerText = '提示：若无有效日期，将不显示区间。');
-            return;
-        }
-
-        const total = (endD - startD) / (1000 * 60 * 60 * 24);
-        const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-        rangeText && (rangeText.innerText = `物流周期：${Math.round(total)} 天`);
-        startText && (startText.innerText = fmt(startD));
-        endText && (endText.innerText = fmt(endD));
-        hint && (hint.innerText = '');
-
-        const rows = card.querySelectorAll('[data-logrow]');
-        rows.forEach(r => {
-            const ship = parseDate(r.querySelector('.log-ship')?.value);
-            const arrive = parseDate(r.querySelector('.log-arrive')?.value);
-            if (!ship || !arrive || arrive <= ship) return;
-
-            const left = ((ship - startD) / (1000*60*60*24)) / total * 100;
-            const width = ((arrive - ship) / (1000*60*60*24)) / total * 100;
-
-            const seg = document.createElement('div');
-            seg.className = 'timeline-seg';
-            seg.style.left = `${Math.max(0, left)}%`;
-            seg.style.width = `${Math.max(1, width)}%`;
-            bar.appendChild(seg);
-        });
     }
 
     function addLogisticsRow(btn) {
@@ -1274,6 +1233,7 @@
         else if(v === 'received') selectEl.classList.add('st-received');
     }
 
+    // ★ 改3：发货卡片不再包含"物流可视化"区域
     function buildShipmentCardHTML(sku, name) {
         return `
         <div class="shipment-card" data-shipment="${escapeHtml(sku)}">
@@ -1345,19 +1305,6 @@
                         <button class="btn-del" title="删除" onclick="removeLogisticsRow(this)"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-
-                <div class="timeline" data-timeline>
-                    <div class="timeline-top">
-                        <span><i class="fas fa-chart-gantt"></i> 物流可视化</span>
-                        <span class="timelineRangeText">--</span>
-                    </div>
-                    <div class="timeline-bar" data-bar></div>
-                    <div class="timeline-markers">
-                        <span class="timelineStartText">--</span>
-                        <span class="timelineEndText">--</span>
-                    </div>
-                    <div class="tiny-note timelineHint">提示：若无有效日期，将不显示区间。</div>
-                </div>
             </div>
 
             <div style="margin-top: 15px;">
@@ -1404,7 +1351,6 @@
                 card.__inited = true;
                 recalcLogistics(any);
             }
-            // 每次同步也检查一次状态
             autoUpdateShipmentStatus(card);
         });
 
@@ -1440,14 +1386,12 @@
                 recalcLogistics(logShip);
             }
 
-            // 同步完数据后，再次触发状态检查
             autoUpdateShipmentStatus(card);
         });
 
-        checkReminders(); // 检查弹窗提醒
+        checkReminders();
     }
 
-    // 绑定产品行内所有输入框变化，实时触发同步
     function bindProductRowChange(scopeEl) {
         const inputs = scopeEl.querySelectorAll('input, select');
         inputs.forEach(inp => {
@@ -1459,7 +1403,7 @@
     }
 
     /* =========================
-       ★ 迭代：右下角弹窗提醒逻辑
+       右下角弹窗提醒逻辑
        ========================= */
     function toggleNotify() {
         const dock = document.getElementById('notification-dock');
@@ -1476,7 +1420,7 @@
         const products = getProductsSnapshot();
         const listEl = document.getElementById('notify-list');
         const countEl = document.getElementById('notify-count');
-        const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const todayStr = new Date().toISOString().split('T')[0];
         let reminders = [];
 
         products.forEach(p => {
@@ -1515,7 +1459,7 @@
         updateClock();
         setInterval(updateClock, 1000);
         
-        renderCalendar(); // 初始化日历
+        renderCalendar();
 
         document.getElementById('btnSkuSearch').addEventListener('click', applySkuSearch);
         document.getElementById('skuSearchInput').addEventListener('keydown', (e) => {
