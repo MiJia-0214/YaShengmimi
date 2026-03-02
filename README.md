@@ -1,1 +1,1 @@
-(https://jiiluke.github.io/mi-/)
+https://jiiluke.github.io/YaShengmimi/
